@@ -112,11 +112,10 @@
  * such license, approval or letter.
  *
  *****************************************************************************/
-
-#include "examples.h"
+#include "acpimttest.h"
 
 #define _COMPONENT          ACPI_EXAMPLE
-        ACPI_MODULE_NAME    ("examples")
+        ACPI_MODULE_NAME    ("acpimttest")
 
 
 /******************************************************************************
@@ -174,10 +173,13 @@ RegionInit (
     void                    **RegionContext);
 
 static void
-ExecuteMAIN (void);
+ExecuteOSI (void);
 
 static void
-ExecuteOSI (void);
+ExecutePSL (void);
+
+static void
+ExecuteInstallNotify (void);
 
 ACPI_STATUS
 InitializeAcpiTables (
@@ -186,6 +188,45 @@ InitializeAcpiTables (
 ACPI_STATUS
 InitializeAcpi (
     void);
+
+/* Stubs for the disassembler */
+
+void
+MpSaveGpioInfo (
+    ACPI_PARSE_OBJECT       *Op,
+    AML_RESOURCE            *Resource,
+    UINT32                  PinCount,
+    UINT16                  *PinList,
+    char                    *DeviceName)
+{
+}
+
+void
+MpSaveSerialInfo (
+    ACPI_PARSE_OBJECT       *Op,
+    AML_RESOURCE            *Resource,
+    char                    *DeviceName)
+{}
+
+/******************************************************************************
+ *
+ * FUNCTION:    AeDoObjectOverrides
+ *
+ * PARAMETERS:  None
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Read the initialization file and perform all overrides
+ *
+ * NOTE:        The format of the file is multiple lines, each of format:
+ *                  <ACPI-pathname> <Integer Value>
+ *
+ *****************************************************************************/
+
+void
+AeDoObjectOverrides (
+    void)
+{}
 
 
 /******************************************************************************
@@ -226,8 +267,13 @@ main (
     ACPI_ERROR       ((AE_INFO, "Example ACPICA error message"));
     ACPI_EXCEPTION   ((AE_INFO, AE_AML_OPERAND_TYPE, "Example ACPICA exception message"));
 
+    AcpiDbgLevel = 0xFFFFFFFF;
+    AcpiGbl_DbConsoleDebugLevel = AcpiDbgLevel; 
+    AcpiDbgLayer = 0xFFFFFFFF;
+
     ExecuteOSI ();
-    ExecuteMAIN ();
+    ExecutePSL ();
+    ExecuteInstallNotify ();
     return (0);
 }
 
@@ -562,6 +608,65 @@ ErrorExit:
     AcpiOsFree (ReturnValue.Pointer);
 }
 
+static void
+ExecutePSL (void)
+{
+    ACPI_STATUS             Status;
+    ACPI_OBJECT_LIST        ArgList;
+    /* ACPI_OBJECT             Arg[1]; */
+    ACPI_BUFFER             ReturnValue;
+    /* ACPI_OBJECT             *Object; */
+
+
+    ACPI_INFO ((AE_INFO, "Executing _PSL reserved method"));
+
+    /* Setup input argument */
+
+    ArgList.Count = 0;
+/*
+    ArgList.Pointer = Arg;
+
+    Arg[0].Type = ACPI_TYPE_STRING;
+    Arg[0].String.Pointer = "Windows 2001";
+    Arg[0].String.Length = strlen (Arg[0].String.Pointer);
+*/
+    /* Ask ACPICA to allocate space for the return object */
+
+    ReturnValue.Length = ACPI_ALLOCATE_BUFFER;
+
+    Status = AcpiEvaluateObject (NULL, "\\_TZ.TZ01._PSL", &ArgList, &ReturnValue);
+    if (ACPI_FAILURE (Status))
+    {
+        ACPI_EXCEPTION ((AE_INFO, Status, "While executing _PSL"));
+        return;
+    }
+
+    /* Ensure that the return object is large enough */
+
+    if (ReturnValue.Length < sizeof (ACPI_OBJECT))
+    {
+        AcpiOsPrintf ("Return value from _PSL method too small, %.8X\n",
+            ReturnValue.Length);
+        goto ErrorExit;
+    }
+
+    /* Expect an integer return value from execution of _OSI */
+/*
+    Object = ReturnValue.Pointer;
+    if (Object->Type != ACPI_TYPE_INTEGER)
+    {
+        AcpiOsPrintf ("Invalid return type from _OSI, %.2X\n", Object->Type);
+    }
+
+    ACPI_INFO ((AE_INFO, "_OSI returned 0x%8.8X", (UINT32) Object->Integer.Value));
+*/
+
+ErrorExit:
+
+    /* Free a buffer created via ACPI_ALLOCATE_BUFFER */
+
+    AcpiOsFree (ReturnValue.Pointer);
+}
 
 /******************************************************************************
  *
@@ -570,47 +675,101 @@ ErrorExit:
  *****************************************************************************/
 
 static void
-ExecuteMAIN (void)
+acpi_processor_notify (
+    ACPI_HANDLE                 Device,
+    UINT32                      Value,
+    void                        *Context)
+{
+
+    ACPI_INFO ((AE_INFO, "acpi_processor_notify, Received a notify 0x%X", Value));
+}
+
+static ACPI_STATUS
+__acpi_processor_start (
+    ACPI_HANDLE                     ObjHandle,
+    UINT32                          NestingLevel,
+    void                            *Context,
+    void                            **ReturnValue)
 {
     ACPI_STATUS             Status;
-    ACPI_OBJECT_LIST        ArgList;
-    ACPI_OBJECT             Arg[1];
-    ACPI_BUFFER             ReturnValue;
-    ACPI_OBJECT             *Object;
 
+    ACPI_INFO ((AE_INFO, "acpica_probe_processor"));
+	AcpiOsPrintf ("acpica_probe_processor\n");
 
-    ACPI_INFO ((AE_INFO, "Executing MAIN method KKKKKKKKKK"));
+/*	//emulate apcid code in processor_driver.c::__acpi_processor_start()
+        status = acpi_install_notify_handler(device->handle, ACPI_DEVICE_NOTIFY,
+                                             acpi_processor_notify, device);
+        if (ACPI_SUCCESS(status))
+                return 0;
+*/
 
-    /* Setup input argument */
-
-    ArgList.Count = 1;
-    ArgList.Pointer = Arg;
-
-    Arg[0].Type = ACPI_TYPE_STRING;
-    Arg[0].String.Pointer = "Method [MAIN] is executing";
-    Arg[0].String.Length = strlen (Arg[0].String.Pointer);
-
-    /* Ask ACPICA to allocate space for the return object */
-
-    ReturnValue.Length = ACPI_ALLOCATE_BUFFER;
-
-    Status = AcpiEvaluateObject (NULL, "\\MAIN", &ArgList, &ReturnValue);
+    Status = AcpiInstallNotifyHandler (ObjHandle, ACPI_DEVICE_NOTIFY, 
+			     	       acpi_processor_notify, NULL);
     if (ACPI_FAILURE (Status))
     {
-        ACPI_EXCEPTION ((AE_INFO, Status, "While executing MAIN"));
+        ACPI_EXCEPTION ((AE_INFO, Status, "While installing Notify handler"));
+        return (Status);
+    }
+
+	return (AE_OK);
+}
+/*
+static void
+ExecuteInstallNotify (void)
+{
+    ACPI_INFO ((AE_INFO, "ExecuteInstallNotify"));
+
+    AcpiGetDevices ("ACPI0007", GetProcessors, NULL, NULL);
+    AcpiGetDevices ("Processor", GetProcessors, NULL, NULL);
+}
+
+ACPI_STATUS
+acpica_build_processor_map(void)
+*/
+static void
+ExecuteInstallNotify (void)
+{
+        ACPI_STATUS Status;
+        void *rv; 
+
+        /*
+         * shouldn't be called more than once anyway
+         */
+/*
+        if (cpu_map_built)
+                return (AE_OK);
+*/
+
+        /*
+         * ACPI device configuration driver has built mapping information
+         * among processor id and object handle, no need to probe again.
+         */
+/*
+        if (acpica_get_devcfg_feature(ACPI_DEVCFG_CPU)) {
+                cpu_map_built = 1;
+                return (AE_OK);
+        }
+*/
+        /*
+         * Look for Processor objects
+         */
+        Status = AcpiWalkNamespace(ACPI_TYPE_PROCESSOR,
+            ACPI_ROOT_OBJECT,
+            4,
+            __acpi_processor_start,
+            NULL,
+            NULL,
+            &rv);
+ /*       ASSERT(status == AE_OK);*/
+if (ACPI_FAILURE (Status))
+    {
+        ACPI_EXCEPTION ((AE_INFO, Status, "AcpiWalkNamespace PROCESSOR"));
         return;
     }
+/*
+        ASSERT(status == AE_OK);
+        cpu_map_built = 1;
 
-    if (ReturnValue.Pointer)
-    {
-        /* Obtain and validate the returned ACPI_OBJECT */
-
-        Object = ReturnValue.Pointer;
-        if (Object->Type == ACPI_TYPE_STRING)
-        {
-            AcpiOsPrintf ("Method [MAIN] returned: \"%s\"\n", Object->String.Pointer);
-        }
-
-        ACPI_FREE (ReturnValue.Pointer);
-    }
+        return (status);
+*/
 }

@@ -20,24 +20,55 @@ PROG = $(OBJDIR)/acpimttest
 #
 vpath %.c \
     $(ACPIMTTEST)\
+    $(ACPICA_DEBUGGER)\
+    $(ACPICA_DISASSEMBLER)\
     $(ACPICA_DISPATCHER)\
     $(ACPICA_EVENTS)\
     $(ACPICA_EXECUTER)\
     $(ACPICA_HARDWARE)\
     $(ACPICA_NAMESPACE)\
     $(ACPICA_PARSER)\
+    $(ACPICA_RESOURCES)\
     $(ACPICA_TABLES)\
     $(ACPICA_UTILITIES)\
     $(ACPICA_COMMON)\
     $(ACPICA_OSL)
 
 HEADERS = \
-    $(wildcard $(ACPIEXAMPLES)/*.h)
+    $(wildcard $(ACPIMTTEST)/*.h)
 
 OBJECTS = \
+	$(OBJDIR)/acgetline.o\
 	$(OBJDIR)/acpimttest.o\
-	$(OBJDIR)/exstubs.o\
 	$(OBJDIR)/extables.o\
+	$(OBJDIR)/ahids.o\
+	$(OBJDIR)/ahuuids.o\
+	$(OBJDIR)/cmfsize.o\
+	$(OBJDIR)/dbcmds.o\
+	$(OBJDIR)/dbconvert.o\
+	$(OBJDIR)/dbdisply.o\
+	$(OBJDIR)/dbexec.o\
+	$(OBJDIR)/dbfileio.o\
+	$(OBJDIR)/dbhistry.o\
+	$(OBJDIR)/dbinput.o\
+	$(OBJDIR)/dbmethod.o\
+	$(OBJDIR)/dbnames.o\
+	$(OBJDIR)/dbstats.o\
+	$(OBJDIR)/dbtest.o\
+	$(OBJDIR)/dbutils.o\
+	$(OBJDIR)/dbxface.o\
+	$(OBJDIR)/dmbuffer.o\
+	$(OBJDIR)/dmcstyle.o\
+	$(OBJDIR)/dmdeferred.o\
+	$(OBJDIR)/dmnames.o\
+	$(OBJDIR)/dmobject.o\
+	$(OBJDIR)/dmopcode.o\
+	$(OBJDIR)/dmresrc.o\
+	$(OBJDIR)/dmresrcl.o\
+	$(OBJDIR)/dmresrcl2.o\
+	$(OBJDIR)/dmresrcs.o\
+	$(OBJDIR)/dmutils.o\
+	$(OBJDIR)/dmwalk.o\
 	$(OBJDIR)/dsargs.o\
 	$(OBJDIR)/dscontrol.o\
 	$(OBJDIR)/dsfield.o\
@@ -52,11 +83,20 @@ OBJECTS = \
 	$(OBJDIR)/dswload2.o\
 	$(OBJDIR)/dswscope.o\
 	$(OBJDIR)/dswstate.o\
+	$(OBJDIR)/evevent.o\
+	$(OBJDIR)/evglock.o\
+	$(OBJDIR)/evgpe.o\
+	$(OBJDIR)/evgpeblk.o\
+	$(OBJDIR)/evgpeinit.o\
+	$(OBJDIR)/evgpeutil.o\
 	$(OBJDIR)/evhandler.o\
 	$(OBJDIR)/evmisc.o\
 	$(OBJDIR)/evregion.o\
 	$(OBJDIR)/evrgnini.o\
+	$(OBJDIR)/evsci.o\
 	$(OBJDIR)/evxface.o\
+	$(OBJDIR)/evxfevnt.o\
+	$(OBJDIR)/evxfgpe.o\
 	$(OBJDIR)/evxfregn.o\
 	$(OBJDIR)/exconfig.o\
 	$(OBJDIR)/exconvrt.o\
@@ -82,12 +122,22 @@ OBJECTS = \
 	$(OBJDIR)/exstorob.o\
 	$(OBJDIR)/exsystem.o\
 	$(OBJDIR)/exutils.o\
+	$(OBJDIR)/getopt.o\
+	$(OBJDIR)/hwacpi.o\
+	$(OBJDIR)/hwesleep.o\
+	$(OBJDIR)/hwgpe.o\
 	$(OBJDIR)/hwpci.o\
+	$(OBJDIR)/hwregs.o\
+	$(OBJDIR)/hwsleep.o\
+	$(OBJDIR)/hwvalid.o\
+	$(OBJDIR)/hwxface.o\
+	$(OBJDIR)/hwxfsleep.o\
 	$(OBJDIR)/nsaccess.o\
 	$(OBJDIR)/nsalloc.o\
 	$(OBJDIR)/nsarguments.o\
 	$(OBJDIR)/nsconvert.o\
 	$(OBJDIR)/nsdump.o\
+	$(OBJDIR)/nsdumpdv.o\
 	$(OBJDIR)/nseval.o\
 	$(OBJDIR)/nsinit.o\
 	$(OBJDIR)/nsload.o\
@@ -117,6 +167,20 @@ OBJECTS = \
 	$(OBJDIR)/psutils.o\
 	$(OBJDIR)/pswalk.o\
 	$(OBJDIR)/psxface.o\
+	$(OBJDIR)/rsaddr.o\
+	$(OBJDIR)/rscalc.o\
+	$(OBJDIR)/rscreate.o\
+	$(OBJDIR)/rsdump.o\
+	$(OBJDIR)/rsdumpinfo.o\
+	$(OBJDIR)/rsinfo.o\
+	$(OBJDIR)/rsio.o\
+	$(OBJDIR)/rsirq.o\
+	$(OBJDIR)/rslist.o\
+	$(OBJDIR)/rsmemory.o\
+	$(OBJDIR)/rsmisc.o\
+	$(OBJDIR)/rsserial.o\
+	$(OBJDIR)/rsutils.o\
+	$(OBJDIR)/rsxface.o\
 	$(OBJDIR)/tbdata.o\
 	$(OBJDIR)/tbfadt.o\
 	$(OBJDIR)/tbfind.o\
@@ -137,6 +201,7 @@ OBJECTS = \
 	$(OBJDIR)/uterror.o\
 	$(OBJDIR)/uteval.o\
 	$(OBJDIR)/utexcep.o\
+	$(OBJDIR)/utfileio.o\
 	$(OBJDIR)/utglobal.o\
 	$(OBJDIR)/uthex.o\
 	$(OBJDIR)/utids.o\
@@ -153,16 +218,21 @@ OBJECTS = \
 	$(OBJDIR)/utresrc.o\
 	$(OBJDIR)/utstate.o\
 	$(OBJDIR)/utstring.o\
+	$(OBJDIR)/uttrack.o\
+	$(OBJDIR)/utuuid.o\
 	$(OBJDIR)/utxface.o\
 	$(OBJDIR)/utxferror.o\
-	$(OBJDIR)/utxfinit.o
+	$(OBJDIR)/utxfinit.o\
+	$(OBJDIR)/utxfmutex.o
 
 #
 # Flags specific to acpinames utility
 #
 CFLAGS += \
-    -DACPI_EXAMPLE_APP\
+    -DACPI_EXEC_APP\
     -I$(ACPIMTTEST)
+
+LDFLAGS += -lpthread
 
 #
 # Common Rules

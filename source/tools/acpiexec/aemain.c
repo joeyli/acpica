@@ -236,7 +236,7 @@ usage (
     ACPI_OPTION ("-v",                  "Display version information");
     ACPI_OPTION ("-vi",                 "Verbose initialization output");
     ACPI_OPTION ("-vr",                 "Verbose region handler output");
-    ACPI_OPTION ("-x <DebugLevel>",     "Debug output level");
+    ACPI_OPTION ("-x <DebugLevel>",     "Debug output level"); 
 
     printf ("\n  From within the interactive mode, use '?' or \"help\" to see\n"
         "  a list of available AML Debugger commands\n");
